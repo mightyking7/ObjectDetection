@@ -1,3 +1,4 @@
 # IDE files
 .idea/*
 
+config/yolov3.weights
