@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 from collections import defaultdict
 import torch.nn.functional as F
-from utils import *
+from utils.parser import *
 
 class Darknet(nn.Module):
     """ YOLOv3 object detection model """
