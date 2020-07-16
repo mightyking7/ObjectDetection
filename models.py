@@ -77,6 +77,22 @@ def create_modules(module_defs):
     return hyperparams, module_list
 
 
+class YOLOLayer(nn.Module):
+    """Detection layer"""
+
+    def __init__(self, anchors, num_classes, img_dim):
+        super(YOLOLayer, self).__init__()
+        self.anchors = anchors
+        self.num_anchors = len(anchors)
+        self.num_classes = num_classes
+        self.bbox_attrs = 5 + num_classes
+        self.image_dim = img_dim
+        self.ignore_thres = 0.5
+        self.lambda_coord = 1
+
+        self.mse_loss = nn.MSELoss(size_average=True) # coordinate loss
+        self.bce_loss = nn.BCELoss(size_average=True) # confidence loss
+        self.ce_loss = nn.CrossEntropyLoss() # class loss
 class Darknet(nn.Module):
     """ YOLOv3 object detection model """
     def __init__(self, config_path, img_size=416):
