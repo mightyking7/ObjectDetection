@@ -93,6 +93,65 @@ class YOLOLayer(nn.Module):
         self.mse_loss = nn.MSELoss(size_average=True) # coordinate loss
         self.bce_loss = nn.BCELoss(size_average=True) # confidence loss
         self.ce_loss = nn.CrossEntropyLoss() # class loss
+
+    def forward(self, x, targets=None):
+        nA = self.num_anchors
+        nB = x.size(0)
+        nG = x.size(2)
+        stride = self.image_dim / nG
+
+        # tensors for cuda support
+        FloatTensor = torch.cuda.FloatTensor if x.is_cuda else torch.FloatTensor
+        LongTensor = torch.cuda.LongTensor if x.is_cuda else torch.LongTensor
+        ByteTensor = torch.cuda.ByteTensor if x.is_cuda else torch.ByteTensor
+
+        prediction = x.view(nB, nA, self.bbox_attrs, nG, nG).permute(0, 1, 3, 4, 2).contiguous()
+
+        # get outputs
+        x = torch.sigmoid(prediction[..., 0]) # center x
+        y = torch.sigmoid(prediction[..., 1]) # center y
+        w = prediction[..., 2] # width
+        h = prediction[..., 3] # height
+        pred_conf = torch.sigmoid(prediction[..., 4]) # conf
+        pred_cls = torch.sigmoid(prediction[..., 5:]) # cls pred
+
+        # calculate offsets for each grid
+        grid_x = torch.arange(nG).repeat(nG, 1).view([1, 1, nG, nG]).type(FloatTensor)
+        grid_y = torch.arange(nG).repeat(nG, 1).t().view([1, 1, nG, nG]).type(FloatTensor)
+        scaled_anchors = FloatTensor([(a_w / stride, a_h / stride) for a_w, a_h in self.anchors])
+        anchor_w = scaled_anchors[:, 0:1].view((1, nA, 1, 1))
+        anchor_h = scaled_anchors[:, 1:2].view((1, nA, 1, 1))
+
+        # add offset and scale with anchors
+        pred_boxes = FloatTensor(prediction[..., :4].shape)
+        pred_boxes[..., 0] = x.data + grid_x
+        pred_boxes[..., 1] = y.data + grid_y
+        pred_boxes[..., 2] = torch.exp(w.data) * anchor_w
+        pred_boxes[..., 3] = torch.exp(h.data) * anchor_h
+
+        # training
+        if targets is not None:
+
+            if x.is_cuda:
+                self.mse_loss = self.mse_loss.cuda()
+                self.bce_loss = self.bce_loss.cuda()
+                self.ce_loss = self.ce_loss.cuda()
+
+            nGT, nCorrect, mask, conf_mask, tx, ty, tw, th, tconf, tcls = build_targets(
+                pred_boxes=pred_boxes.cpu().data,
+                pred_conf=pred_conf.cpu().data,
+                pred_cls=pred_cls.cpu().data,
+                target=targets.cpu().data,
+                anchors=scaled_anchors.cpu().data,
+                num_anchors=nA,
+                num_classes=self.num_classes,
+                grid_size=nG,
+                ignore_thres=self.ignore_thres,
+                img_dim=self.image_dim
+            )
+
+
+
 class Darknet(nn.Module):
     """ YOLOv3 object detection model """
     def __init__(self, config_path, img_size=416):
