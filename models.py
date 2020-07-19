@@ -150,6 +150,59 @@ class YOLOLayer(nn.Module):
                 img_dim=self.image_dim
             )
 
+            nProposals = int((pred_conf > 0.5).sum().item())
+            recall = float(nCorrect / nGT) if nGT else 1
+            precision = float(nCorrect / nProposals)
+
+            # handle masks
+            mask = torch.tensor(mask, dtype=torch.ByteTensor)
+            conf_mask = torch.tensor(conf_mask, dtype=torch.ByteTensor)
+
+            tx = torch.tensor(tx, dtype=torch.FloatTensor, requires_grad=False)
+            ty = torch.tensor(ty, dtype=torch.FloatTensor, requires_grad=False)
+            tw = torch.tensor(tw, dtype=torch.FloatTensor, requires_grad=False)
+            th = torch.tensor(th, dtype=torch.FloatTensor, requires_grad=False)
+            tconf = torch.tensor(tconf, dtype=torch.FloatTensor, requires_grad=False)
+            tcls = torch.tensor(tcls, dtype=torch.LongTensor, requires_grad=False)
+
+            # Get conf mask where gt and where there is no gt
+            conf_mask_true = mask
+            conf_mask_false = conf_mask - mask
+
+            # mask outputs to ignore non-existing objects
+            loss_x = self.mse_loss(x[mask], tx[mask])
+            loss_y = self.mse_loss(y[mask], ty[mask])
+            loss_w = self.mse_loss(w[mask], tw[mask])
+            loss_h = self.mse_loss(h[mask], th[mask])
+            loss_conf = self.bce_loss(pred_conf[conf_mask_false],\
+                                      tconf[conf_mask_false] + self.bce_loss(pred_conf[conf_mask_true], tconf[conf_mask_true]))
+            loss_cls = (1 / nB) * self.ce_loss(pred_cls[mask], torch.argmax(tcls[mask], dim=1))
+            loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
+
+            return (
+                loss,
+                loss_x.item(),
+                loss_y.item(),
+                loss_w.item(),
+                loss_h.item(),
+                loss_conf.item(),
+                loss_cls.item(),
+                recall,
+                precision,
+            )
+
+        else:
+            # not in training phase return predictions
+            output = torch.cat(
+                (
+                    pred_boxes.view(nB, -1, 4) * stride,
+                    pred_conf.view(nB, -1, 1),
+                    pred_cls.view(nB, -1, self.num_classes),
+                ),
+                -1
+            )
+
+            return output
 
 
 class Darknet(nn.Module):
