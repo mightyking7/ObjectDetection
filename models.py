@@ -76,6 +76,11 @@ def create_modules(module_defs):
 
     return hyperparams, module_list
 
+class EmptyLayer(nn.Module):
+
+    def __init__(self):
+        super(EmptyLayer, self).__init__()
+
 
 class YOLOLayer(nn.Module):
     """Detection layer"""
