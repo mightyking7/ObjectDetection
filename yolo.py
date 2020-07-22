@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from PIL import Image
 from models import Darknet
-import utils
+from utils.utils import load_classes, non_max_suppression
 
 config_path='config/yolov3.cfg'
 weights_path='config/yolov3.weights'
@@ -22,7 +22,7 @@ model.load_weights(weights_path)
 model.cuda()
 model.eval()
 
-classes = utils.load_classes(class_path)
+classes = load_classes(class_path)
 Tensor = torch.cuda.FloatTensor
 
 def detectImage(img:Image):
@@ -45,7 +45,7 @@ def detectImage(img:Image):
     # run inference on model and get detections
     with torch.no_grad():
         detections = model(img_tensor)
-        detections = utils.non_max_suppression(detections, 80, conf_thres, nms_thres)
+        detections = non_max_suppression(detections, 80, conf_thres, nms_thres)
 
     return detections[0]
 
