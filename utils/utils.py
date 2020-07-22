@@ -128,3 +128,74 @@ def build_targets(pred_boxes, pred_conf, pred_cls, target, anchors, n_anchors, n
                 nCorrect += 1
 
     return nGT, nCorrect, mask, conf_mask, tx, ty, tw, th, tconf, tcls
+
+
+
+def non_max_suppression(prediction, n_classes, conf_thres=0.5, nms_thres=0.4):
+    """
+    Removes detections with lower object confidence score than 'cond_thres' and preforms
+    Non-maximum suppression to further filter detections.
+    Returns detections with shape:
+    (x1, y1, x2, y2, object_conf, class_score, class_pred)
+    """
+
+    # from center x, center y, width, height to x1, y1, x2, y2
+    box_corner = prediction.new(prediction.shape)
+    box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
+    box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
+    box_corner[:, :, 2] = prediction[:, :, 0] + prediction[:, :, 2] / 2
+    box_corner[:, :, 3] = prediction[:, :, 1] + prediction[:, :, 3] / 2
+    prediction[:, :, :4] = box_corner[:, :, :4]
+
+    output = [None for _ in range(len(prediction))]
+
+    for image_i, image_pred in enumerate(prediction):
+        # filter out confidence scores below threshold
+        conf_mask = (image_pred[:, 4] >= conf_thres).squeeze()
+        image_pred = image_pred[conf_mask]
+
+        if not image_pred.size(0):
+            continue
+
+        # get score and class with highest confidence
+        class_conf, class_pred = torch.max(image_pred[:, 5 : 5 + n_classes], 1, keepdim=True)
+
+        # detection ordered as (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
+        detections = torch.cat((image_pred[:, :5], class_conf.float(), class_pred.float()), 1)
+
+        # iterate through all predicted classes
+        unique_labels = detections[:, -1].cpu().unique()
+
+        if prediction.is_cuda:
+            unique_labels = unique_labels.cuda()
+
+        for c in unique_labels:
+            # get detections with particular class
+            detections_class = detections[detections[:, -1] == c]
+
+            # sort detections by maximum object confidence
+            _, conf_sort_index = torch.sort(detections_class[:, 4], descending=True)
+            detections_class = detections_class[conf_sort_index]
+
+            # perform non-maximum suppression
+            max_detections = []
+            while detections_class.size(0):
+                # get detection with highest confidence and save as max detection
+                max_detections.append(detections_class[0].unsqueeze(0))
+
+                # stop at last detection
+                if len(detections_class) == 1:
+                    break
+
+                # ger IoUs for all boxes with lower confidence
+                ious = bbox_iou(max_detections[-1], detections_class[1:])
+
+                # remove detections with IoU >= NMS threshold
+                detections_class = detections_class[1:][ious < nms_thres]
+
+            max_detections = torch.cat(max_detections).data
+
+            # add max detections to outputs
+            output[image_i] = (max_detections if output[image_i] is None else torch.cat((output[image_i], max_detections)))
+
+    return output
