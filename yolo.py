@@ -16,10 +16,13 @@ img_size=416
 conf_thres=0.8
 nms_thres=0.4
 
+
+device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+
 # Load model and weights
 model = Darknet(config_path, img_size=img_size)
 model.load_weights(weights_path)
-model.cuda()
+model.to(device)
 model.eval()
 
 classes = load_classes(class_path)
