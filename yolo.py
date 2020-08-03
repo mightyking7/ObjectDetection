@@ -44,10 +44,11 @@ def detectImage(img:Image):
     # convert image to tensor
     img_tensor = img_transforms(img).float()
     img_tensor = img_tensor.unsqueeze(0)
+    input_img = torch.tensor(img_tensor)
 
     # run inference on model and get detections
     with torch.no_grad():
-        detections = model(img_tensor)
+        detections = model(input_img)
         detections = non_max_suppression(detections, 80, conf_thres, nms_thres)
 
     return detections[0]
