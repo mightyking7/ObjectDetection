@@ -95,8 +95,8 @@ if detections is not None:
         plt.text(x1, y1, s=classes[int(cls_pred)], color='white', verticalalignment='top',
                  bbox={'color': color, 'pad': 0})
 
-        plt.axis('off')
+plt.axis('off')
 
-        # save image
-        plt.savefig(img_path.replace(".jpg", "-det.jpg"), bbox_inches='tight', pad_inches=0.0)
-        plt.show()
+# save image
+plt.savefig(img_path.replace(".jpg", "-det.jpg"), bbox_inches='tight', pad_inches=0.0)
+plt.show()
