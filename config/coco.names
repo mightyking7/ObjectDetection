@@ -1,6 +1,4 @@
-
-expors PATH="~/Library/Python/2.7/bin:${PATH}"
-n
+person
 bicycle
 car
 motorbike
