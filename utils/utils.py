@@ -30,7 +30,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
     # get coordinates of intersection rectangle
     inter_rect_x1 = torch.max(b1_x1, b2_x1)
     inter_rect_y1 = torch.max(b1_y1, b2_y1)
-    inter_rect_x2 = torch.max(b1_x2, b2_x2)
+    inter_rect_x2 = torch.min(b1_x2, b2_x2)
     inter_rect_y2 = torch.min(b1_y2, b2_y2)
 
     # intersection area
