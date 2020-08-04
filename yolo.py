@@ -9,9 +9,9 @@ from PIL import Image
 from models import Darknet
 from utils.utils import load_classes, non_max_suppression
 
-config_path='config/yolov3.cfg'
-weights_path='config/yolov3.weights'
-class_path='config/coco.names'
+config_path='./config/yolov3.cfg'
+weights_path='./config/yolov3.weights'
+class_path='./config/coco.names'
 img_size=416
 conf_thres=0.8
 nms_thres=0.4
