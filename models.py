@@ -4,6 +4,7 @@ import torch.nn as nn
 from collections import defaultdict
 import torch.nn.functional as F
 from utils.parser import *
+from utils.utils import build_targets
 
 def create_modules(module_defs):
     """Constructs module list of layer blocks from module config in module_defs"""
@@ -249,7 +250,7 @@ class Darknet(nn.Module):
                 else:
                     x = module(x)
                 output.append(x)
-                layer_outputs.append(x)
+            layer_outputs.append(x)
 
         self.losses["recall"] /= 3
         self.losses["precision"] /= 3
