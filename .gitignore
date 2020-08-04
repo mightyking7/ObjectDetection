@@ -2,3 +2,6 @@
 .idea/*
 
 config/yolov3.weights
+
+__pycache__/*
+utils/__pycache__/*
