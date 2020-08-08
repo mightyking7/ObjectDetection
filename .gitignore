@@ -4,8 +4,9 @@
 # config files
 config/yolov3.weights
 
-# videos
+# videos and images
 images/*.mp4
+images/*-det.jpg
 
 # pycache files
 __pycache__/*
