@@ -1,7 +1,12 @@
 # IDE files
 .idea/*
 
+# config files
 config/yolov3.weights
 
+# videos
+images/*.mp4
+
+# pycache files
 __pycache__/*
 utils/__pycache__/*
