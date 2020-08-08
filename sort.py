@@ -20,7 +20,7 @@ import numpy as np
 ##import matplotlib.pyplot as plt
 ##import matplotlib.patches as patches
 from skimage import io
-from sklearn.utils.linear_assignment_ import linear_assignment
+from scipy.optimize import linear_sum_assignment as linear_assignment
 import glob
 import time
 import argparse
@@ -30,7 +30,7 @@ from filterpy.kalman import KalmanFilter
 @jit
 def iou(bb_test, bb_gt):
     """
-    Computes IUO between two bboxes in the form [x1,y1,x2,y2]
+    Computes IOU between two bboxes in the form [x1,y1,x2,y2]
     """
     xx1 = np.maximum(bb_test[0], bb_gt[0])
     yy1 = np.maximum(bb_test[1], bb_gt[1])
