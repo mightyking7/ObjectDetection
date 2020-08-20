@@ -27,7 +27,6 @@ model.load_weights(weights_path)
 model.eval()
 
 classes = utils.load_classes(class_path)
-# Tensor = torch.cuda.FloatTensor
 
 def detect_image(img):
     # scale and pad image
@@ -39,13 +38,13 @@ def detect_image(img):
                         (128,128,128)),
          transforms.ToTensor(),
          ])
+
     # convert image to Tensor
-    image_tensor = img_transforms(img).float()
-    image_tensor = image_tensor.unsqueeze_(0)
-    input_img = torch.FloatTensor(image_tensor)
+    image_tensor = img_transforms(img).float().unsqueeze_(0)
+
     # run inference on the model and get detections
     with torch.no_grad():
-        detections = model(input_img)
+        detections = model(image_tensor)
         detections = utils.non_max_suppression(detections, 80, conf_thres, nms_thres)
     return detections[0]
 
