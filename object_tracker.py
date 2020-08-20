@@ -75,15 +75,19 @@ if not vid.isOpened():
 
 frames = 0
 starttime = time.time()
+
+QUIT = 81
+
 while(True):
+
     ret, frame = vid.read()
     if not ret:
         break
+
     frames += 1
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     pilimg = Image.fromarray(frame)
     detections = detect_image(pilimg)
-
     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     img = np.array(pilimg)
     pad_x = max(img.shape[0] - img.shape[1], 0) * (img_size / max(img.shape))
@@ -109,12 +113,11 @@ while(True):
             cv2.putText(frame, cls + "-" + str(int(obj_id)), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 3)
 
     cv2.imshow('Stream', frame)
-    outvideo.write(frame)
-    ch = 0xFF & cv2.waitKey(1)
-    if ch == 27:
+
+    ch = cv2.waitKey(1)
+    if ch == QUIT:
         break
 
 totaltime = time.time()-starttime
 print(frames, "frames", totaltime/frames, "s/frame")
 cv2.destroyAllWindows()
-outvideo.release()
