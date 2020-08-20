@@ -209,21 +209,26 @@ class Sort(object):
         trks = np.zeros((len(self.trackers), 5))
         to_del = []
         ret = []
+
         for t, trk in enumerate(trks):
             pos = self.trackers[t].predict()[0]
             trk[:] = [pos[0], pos[1], pos[2], pos[3], 0]
             if (np.any(np.isnan(pos))):
                 to_del.append(t)
+
         trks = np.ma.compress_rows(np.ma.masked_invalid(trks))
+
         for t in reversed(to_del):
             self.trackers.pop(t)
+
         matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(dets, trks)
 
         # update matched trackers with assigned detections
         for t, trk in enumerate(self.trackers):
             if (t not in unmatched_trks):
                 d = matched[np.where(matched[:, 1] == t)[0], 0]
-                trk.update(dets[d, :][0])
+                if d:
+                    trk.update(dets[d, :][0])
 
         # create and initialise new trackers for unmatched detections
         for i in unmatched_dets:
