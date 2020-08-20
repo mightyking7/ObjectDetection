@@ -20,13 +20,22 @@ import numpy as np
 ##import matplotlib.pyplot as plt
 ##import matplotlib.patches as patches
 from skimage import io
-from scipy.optimize import linear_sum_assignment as linear_assignment
 import glob
 import time
 import argparse
 import matplotlib.pyplot as plt
 from filterpy.kalman import KalmanFilter
 
+
+def linear_assignment(cost_matrix):
+  try:
+    import lap
+    _, x, y = lap.lapjv(cost_matrix, extend_cost=True)
+    return np.array([[y[i],i] for i in x if i >= 0]) #
+  except ImportError:
+    from scipy.optimize import linear_sum_assignment
+    x, y = linear_sum_assignment(cost_matrix)
+    return np.array(list(zip(x, y)))
 
 @jit
 def iou(bb_test, bb_gt):
