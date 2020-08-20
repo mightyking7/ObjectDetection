@@ -48,23 +48,30 @@ def detect_image(img):
         detections = utils.non_max_suppression(detections, 80, conf_thres, nms_thres)
     return detections[0]
 
-videopath = './images/NYCIntersection.mp4'
 
+# real-time tracking algorithm
+mot_tracker = Sort()
 
 colors=[(255,0,0),(0,255,0),(0,0,255),(255,0,255),(128,0,0),(0,128,0),(0,0,128),(128,0,128),(128,128,0),(0,128,128)]
 
-vid = cv2.VideoCapture(videopath)
-mot_tracker = Sort()
+# video capture from webcam
+vid = cv2.VideoCapture(0)
 
-cv2.namedWindow('Stream',cv2.WINDOW_NORMAL)
-cv2.resizeWindow('Stream', (800,600))
+if not vid.isOpened():
+    print("Cannot open camera")
+    exit()
 
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-ret,frame=vid.read()
-vw = frame.shape[1]
-vh = frame.shape[0]
-print ("Video size", vw,vh)
-outvideo = cv2.VideoWriter(videopath.replace(".mp4", "-det.mp4"),fourcc,20.0,(vw,vh))
+# cv2.namedWindow('Stream', cv2.WINDOW_NORMAL)
+# cv2.resizeWindow('Stream', (800,600))
+
+# fourcc = cv2.VideoWriter_fourcc(*'XVID')
+
+# ret,frame=vid.read()
+# vw = frame.shape[1]
+# vh = frame.shape[0]
+#
+# print ("Video size", vw, vh)
+# outvideo = cv2.VideoWriter(videopath.replace(".mp4", "-det.mp4"), fourcc, 20.0, (vw,vh))
 
 frames = 0
 starttime = time.time()
